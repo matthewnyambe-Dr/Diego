@@ -79,7 +79,7 @@ def create_checkout():
         'amount': plan['price'],
         'currency': plan['currency'],
         'order_id': f"{user_id}:{plan_id}:{uuid.uuid4().hex[:8]}",
-        'callback_url': f"{SITE_URL}/api/webhook/oxapay",
+        # 'callback_url': f"{SITE_URL}/api/webhook/oxapay", # Temporarily disabled to fix validation error
         'return_url': f"{SITE_URL}/dashboard",
         'description': f"TreatBlocker {plan['name']} Plan Subscription",
         'sandbox': SANDBOX_MODE
