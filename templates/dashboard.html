@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — TreatBlocker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --white:#ffffff; --bg:#f9fafb; --bg2:#f3f4f8; --surface:#ffffff;
+  --blue:#3B6EF8; --blue-dk:#2A55D6; --blue-lt:#EBF0FF; --blue-mid:#C7D4FC;
+  --slate:#1e2235; --slate2:#3d4260; --muted:#6b7080; --muted2:#9ba3b8;
+  --border:#e5e8f2; --border2:#d0d5e8;
+  --green:#059669; --green-lt:#d1fae5;
+  --amber:#d97706; --amber-lt:#fef3c7;
+  --rose:#e11d48;  --rose-lt:#ffe4e6;
+  --shadow-sm:0 1px 4px rgba(30,34,53,0.07);
+  --shadow:0 4px 20px rgba(30,34,53,0.09);
+  --shadow-lg:0 12px 48px rgba(30,34,53,0.12);
+  --r:12px; --r-lg:18px; --r-xl:24px;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--slate);min-height:100vh;-webkit-font-smoothing:antialiased;}
+
+nav{
+  position:sticky;top:0;z-index:200;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:0 2.5rem;height:66px;
+  background:rgba(255,255,255,0.9);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+}
+
+.logo-link{display:flex;align-items:center;gap:0.6rem;text-decoration:none;}
+.logo-img{width:30px;height:30px;object-fit:contain;filter:brightness(0.15);}
+.logo-name{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--slate);}
+.logo-name span{color:var(--blue);}
+
+.nav-back{
+  font-size:0.875rem;font-weight:500;color:var(--muted);
+  text-decoration:none;padding:0.42rem 0.9rem;border-radius:8px;
+  background:var(--bg2);border:1px solid var(--border2);
+  transition:all 0.15s;
+}
+.nav-back:hover{color:var(--slate);}
+
+.dash{max-width:940px;margin:0 auto;padding:2.5rem 2rem 5rem;}
+
+.page-head{margin-bottom:2rem;}
+.page-title{font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;color:var(--slate);letter-spacing:-0.3px;}
+.page-sub{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted2);margin-top:0.3rem;text-transform:uppercase;letter-spacing:0.08em;}
+
+/* KPI grid */
+.kpi-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:1px;background:var(--border2);
+  border:1px solid var(--border2);border-radius:var(--r-lg);
+  overflow:hidden;margin-bottom:2.5rem;
+}
+
+.kpi{background:var(--white);padding:1.3rem 1.2rem;}
+.kpi-v{font-family:'Playfair Display',serif;font-size:1.9rem;font-weight:700;color:var(--slate);line-height:1;display:block;}
+.kpi-v.blue  {color:var(--blue);}
+.kpi-v.green {color:var(--green);}
+.kpi-v.rose  {color:var(--rose);}
+.kpi-v.amber {color:var(--amber);}
+.kpi-l{font-family:'DM Mono',monospace;font-size:0.67rem;color:var(--muted2);text-transform:uppercase;letter-spacing:0.08em;margin-top:0.35rem;display:block;}
+
+/* Section head */
+.sec-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.9rem;margin-top:2.2rem;}
+.sec-title{font-weight:600;font-size:0.975rem;color:var(--slate);}
+.sec-count{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted2);}
+
+/* Block list */
+.block-list{display:flex;flex-direction:column;gap:0.55rem;}
+
+.block-row{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:0.95rem 1.2rem;
+  display:flex;align-items:center;gap:0.9rem;
+  transition:all 0.15s;
+}
+.block-row:hover{border-color:var(--blue-mid);box-shadow:var(--shadow-sm);}
+
+.b-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.dot-blocked   {background:var(--green);box-shadow:0 0 0 3px rgba(5,150,105,0.15);}
+.dot-overridden{background:var(--rose);}
+.dot-expired   {background:var(--muted2);}
+
+.b-info{flex:1;min-width:0;}
+.b-name{font-weight:500;font-size:0.9rem;color:var(--slate);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.b-meta{font-family:'DM Mono',monospace;font-size:0.69rem;color:var(--muted2);margin-top:0.2rem;}
+
+.b-tag{font-family:'DM Mono',monospace;font-size:0.67rem;font-weight:700;padding:0.22rem 0.65rem;border-radius:100px;flex-shrink:0;}
+.tag-HIGH   {background:var(--rose-lt);  color:var(--rose); }
+.tag-MEDIUM {background:var(--amber-lt); color:var(--amber);}
+.tag-LOW    {background:var(--green-lt); color:var(--green);}
+
+.b-price{font-family:'DM Mono',monospace;font-size:0.875rem;font-weight:600;flex-shrink:0;}
+.saved {color:var(--green);}
+.spent {color:var(--rose);}
+
+.empty{text-align:center;padding:3.5rem 2rem;color:var(--muted2);}
+.empty .e-icon{font-size:2.2rem;display:block;margin-bottom:0.75rem;}
+.empty p{font-size:0.875rem;}
+.empty a{color:var(--blue);text-decoration:none;}
+
+/* Platform */
+.plat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:0.8rem;}
+
+.plat-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:1.1rem 1.2rem;
+  transition:all 0.15s;
+}
+.plat-card:hover{border-color:var(--blue-mid);box-shadow:var(--shadow-sm);}
+.plat-name{font-weight:600;font-size:0.875rem;color:var(--slate);margin-bottom:0.75rem;}
+.plat-row{display:flex;justify-content:space-between;font-size:0.78rem;color:var(--muted2);margin-top:0.28rem;}
+.plat-row .v{font-family:'DM Mono',monospace;color:var(--slate);}
+.plat-row .v.g{color:var(--green);}
+
+/* CTA */
+.cta-bar{
+  background:linear-gradient(135deg, var(--blue-lt) 0%, #eef2ff 100%);
+  border:1px solid var(--blue-mid);
+  border-radius:var(--r-xl);padding:1.8rem 2rem;
+  display:flex;justify-content:space-between;align-items:center;
+  gap:1.5rem;margin-top:2.5rem;
+}
+.cta-bar h3{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:700;color:var(--slate);}
+.cta-bar p{font-size:0.83rem;color:var(--muted);margin-top:0.28rem;line-height:1.55;}
+
+.btn-upgrade{
+  background:var(--blue);color:var(--white);
+  border:none;border-radius:var(--r);
+  padding:0.8rem 1.5rem;font-size:0.875rem;font-weight:600;
+  cursor:pointer;white-space:nowrap;transition:all 0.15s;
+  box-shadow:0 2px 10px rgba(59,110,248,0.22);
+}
+.btn-upgrade:hover{background:var(--blue-dk);box-shadow:0 6px 20px rgba(59,110,248,0.32);transform:translateY(-1px);}
+
+footer{border-top:1px solid var(--border);background:var(--white);padding:1.6rem 2rem;text-align:center;}
+footer p{font-size:0.78rem;color:var(--muted2);}
+footer a{color:var(--blue);text-decoration:none;}
+footer a:hover{text-decoration:underline;}
+
+@media(max-width:640px){
+  nav{padding:0 1.2rem;}
+  .cta-bar{flex-direction:column;}
+  .kpi-v{font-size:1.5rem;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo-link">
+    <img src="/static/logo.jpg" alt="TreatBlocker" class="logo-img">
+    <span class="logo-name">Treat<span>Blocker</span></span>
+  </a>
+  <a href="/" class="nav-back">← Scan a URL</a>
+</nav>
+
+<div class="dash">
+  <div class="page-head">
+    <div class="page-title">Your Savings</div>
+    <div class="page-sub">Session data · resets on cookie clear</div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi"><span class="kpi-v green" id="kpi-saved">$0</span><span class="kpi-l">Total saved</span></div>
+    <div class="kpi"><span class="kpi-v blue"  id="kpi-blocks">0</span><span class="kpi-l">Buys blocked</span></div>
+    <div class="kpi"><span class="kpi-v amber" id="kpi-rate">—</span><span class="kpi-l">Success rate</span></div>
+    <div class="kpi"><span class="kpi-v rose"  id="kpi-spent">$0</span><span class="kpi-l">Spent anyway</span></div>
+    <div class="kpi"><span class="kpi-v green" id="kpi-week">$0</span><span class="kpi-l">This week</span></div>
+  </div>
+
+  <!-- Recent blocks -->
+  <div class="sec-head">
+    <div class="sec-title">Recent blocks</div>
+    <div class="sec-count" id="block-count">0 total</div>
+  </div>
+
+  <div class="block-list" id="block-list">
+    <div class="empty">
+      <span class="e-icon">🌿</span>
+      <p>Nothing blocked yet. <a href="/">Scan a URL</a> to start saving.</p>
+    </div>
+  </div>
+
+  <!-- Platform breakdown -->
+  <div class="sec-head" style="margin-top:2.5rem;">
+    <div class="sec-title">By platform</div>
+  </div>
+  <div class="plat-grid" id="plat-grid">
+    <p style="font-size:0.82rem;color:var(--muted2);padding:0.5rem 0;">No data yet.</p>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-bar">
+    <div>
+      <h3>Go unlimited</h3>
+      <p>Free plan is capped at 3 scans per day. Pro gives you unlimited blocks, AI spending insights, and family mode.</p>
+    </div>
+    <button class="btn-upgrade" onclick="window.location.href='/#pricing'">
+      Upgrade to Pro — $4.99 / mo →
+    </button>
+  </div>
+</div>
+
+<footer>
+  <p><a href="/">← Back to TreatBlocker</a> &nbsp;·&nbsp; Built by <a href="#">MAnime LA</a> &nbsp;·&nbsp; Session data only on free plan.</p>
+</footer>
+
+<script>
+async function load() {
+  try {
+    const res  = await fetch('/api/stats');
+    const data = await res.json();
+
+    document.getElementById('kpi-saved').textContent  = '$' + data.total_saved;
+    document.getElementById('kpi-blocks').textContent = data.total_blocks;
+    document.getElementById('kpi-rate').textContent   = data.success_rate + '%';
+    document.getElementById('kpi-spent').textContent  = '$' + data.total_spent_anyway;
+    document.getElementById('kpi-week').textContent   = '$' + data.week_saved;
+    document.getElementById('block-count').textContent = data.total_blocks + ' total';
+
+    if (data.recent_blocks && data.recent_blocks.length > 0) {
+      document.getElementById('block-list').innerHTML = data.recent_blocks.map(b => {
+        const a      = b.analysis || {};
+        const status = b.status || 'blocked';
+        const dotCls = status === 'blocked' ? 'dot-blocked' : status === 'overridden' ? 'dot-overridden' : 'dot-expired';
+        const prCls  = status === 'blocked' ? 'saved' : 'spent';
+        const prefix = status === 'blocked' ? '+$' : '-$';
+        const ts     = new Date(b.timestamp).toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+
+        return `
+          <div class="block-row">
+            <div class="b-dot ${dotCls}"></div>
+            <div class="b-info">
+              <div class="b-name">${a.product_name || 'Unknown product'}</div>
+              <div class="b-meta">${a.platform || '—'} · ${ts} · ${status.toUpperCase()}</div>
+            </div>
+            <div class="b-tag tag-${a.risk_level || 'LOW'}">${(a.risk_level || '?').toLowerCase()}</div>
+            <div class="b-price ${prCls}">${b.price > 0 ? prefix + b.price : '—'}</div>
+          </div>`;
+      }).join('');
+    }
+
+    if (Object.keys(data.platform_breakdown || {}).length > 0) {
+      document.getElementById('plat-grid').innerHTML = Object.entries(data.platform_breakdown).map(([name, s]) => `
+        <div class="plat-card">
+          <div class="plat-name">${name}</div>
+          <div class="plat-row">Blocks <span class="v">${s.count}</span></div>
+          <div class="plat-row">Saved  <span class="v g">$${s.saved}</span></div>
+        </div>`).join('');
+    }
+
+  } catch(e) { console.log(e); }
+}
+
+load();
+</script>
+</body>
+</html>

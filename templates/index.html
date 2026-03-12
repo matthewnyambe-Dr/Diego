@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TreatBlocker — Spend Smarter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+
+:root {
+  --white:       #ffffff;
+  --bg:          #f9fafb;
+  --bg2:         #f3f4f8;
+  --surface:     #ffffff;
+  --blue:        #3B6EF8;
+  --blue-dk:     #2A55D6;
+  --blue-lt:     #EBF0FF;
+  --blue-mid:    #C7D4FC;
+  --slate:       #1e2235;
+  --slate2:      #3d4260;
+  --muted:       #6b7080;
+  --muted2:      #9ba3b8;
+  --border:      #e5e8f2;
+  --border2:     #d0d5e8;
+  --green:       #059669;
+  --green-lt:    #d1fae5;
+  --amber:       #d97706;
+  --amber-lt:    #fef3c7;
+  --rose:        #e11d48;
+  --rose-lt:     #ffe4e6;
+  --shadow-sm:   0 1px 4px rgba(30,34,53,0.07);
+  --shadow:      0 4px 20px rgba(30,34,53,0.09);
+  --shadow-lg:   0 12px 48px rgba(30,34,53,0.12);
+  --r:           12px;
+  --r-lg:        18px;
+  --r-xl:        24px;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--slate);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* subtle top gradient */
+body::before {
+  content:'';
+  position:fixed; top:0; left:0; right:0; height:480px;
+  background:
+    radial-gradient(ellipse 55% 35% at 80% -5%, rgba(59,110,248,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 25% at 15%  8%, rgba(59,110,248,0.05) 0%, transparent 55%);
+  pointer-events:none; z-index:0;
+}
+
+/* ── NAV ── */
+nav {
+  position:sticky; top:0; z-index:200;
+  display:flex; justify-content:space-between; align-items:center;
+  padding:0 2.5rem; height:66px;
+  background:rgba(255,255,255,0.9);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+}
+
+.logo-link {
+  display:flex; align-items:center; gap:0.6rem;
+  text-decoration:none;
+}
+
+.logo-img {
+  width:32px; height:32px;
+  object-fit:contain;
+  filter: brightness(0.15);
+}
+
+.logo-name {
+  font-family:'Playfair Display', serif;
+  font-size:1.18rem; font-weight:700;
+  color:var(--slate); letter-spacing:-0.2px;
+}
+
+.logo-name span { color:var(--blue); }
+
+.nav-right {
+  display:flex; align-items:center; gap:0.25rem;
+}
+
+.nav-link {
+  font-size:0.875rem; font-weight:500;
+  color:var(--muted); text-decoration:none;
+  padding:0.42rem 0.85rem; border-radius:8px;
+  transition:all 0.15s;
+}
+
+.nav-link:hover { color:var(--slate); background:var(--blue-lt); }
+
+.nav-btn {
+  font-size:0.875rem; font-weight:600;
+  color:var(--white); background:var(--blue);
+  text-decoration:none;
+  padding:0.48rem 1.2rem; border-radius:8px;
+  margin-left:0.3rem;
+  box-shadow:0 2px 8px rgba(59,110,248,0.28);
+  transition:all 0.15s;
+}
+
+.nav-btn:hover {
+  background:var(--blue-dk);
+  box-shadow:0 4px 14px rgba(59,110,248,0.38);
+  transform:translateY(-1px);
+}
+
+/* ── HERO ── */
+.hero {
+  position:relative; z-index:1;
+  max-width:860px; margin:0 auto;
+  padding:6.5rem 2rem 3rem;
+  text-align:center;
+}
+
+.hero-eyebrow {
+  display:inline-flex; align-items:center; gap:0.5rem;
+  font-size:0.76rem; font-weight:600;
+  letter-spacing:0.06em; text-transform:uppercase;
+  color:var(--blue);
+  background:var(--blue-lt); border:1px solid var(--blue-mid);
+  padding:0.32rem 0.9rem; border-radius:100px;
+  margin-bottom:1.8rem;
+}
+
+.eyebrow-dot {
+  width:6px; height:6px; border-radius:50%;
+  background:var(--blue);
+  animation:glow 2.4s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%,100% { box-shadow:0 0 0 2px rgba(59,110,248,0.25); }
+  50%      { box-shadow:0 0 0 5px rgba(59,110,248,0.08); }
+}
+
+.hero h1 {
+  font-family:'Playfair Display', serif;
+  font-size:clamp(2.4rem, 5.5vw, 3.9rem);
+  font-weight:700; line-height:1.13;
+  color:var(--slate); letter-spacing:-0.8px;
+  margin-bottom:1.3rem;
+}
+
+.hero h1 em {
+  font-style:italic; color:var(--blue);
+}
+
+.hero p {
+  font-size:1.05rem; color:var(--muted);
+  max-width:500px; margin:0 auto 3rem;
+  line-height:1.8; font-weight:400;
+}
+
+/* ── SCAN CARD ── */
+.scan-wrap {
+  position:relative; z-index:1;
+  max-width:580px; margin:0 auto;
+  padding:0 1.5rem 4rem;
+}
+
+.scan-card {
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:var(--r-xl);
+  padding:2rem 2rem 2.2rem;
+  box-shadow:var(--shadow-lg);
+}
+
+.card-label {
+  font-size:0.7rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.12em;
+  color:var(--muted2); margin-bottom:1rem;
+  display:flex; align-items:center; gap:0.5rem;
+}
+
+.card-label::after {
+  content:''; flex:1; height:1px; background:var(--border);
+}
+
+.input-shell {
+  display:flex; gap:0.45rem;
+  background:var(--bg); border:1.5px solid var(--border2);
+  border-radius:var(--r); padding:0.35rem;
+  transition:border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-shell:focus-within {
+  border-color:var(--blue);
+  box-shadow:0 0 0 4px rgba(59,110,248,0.1);
+}
+
+.url-input {
+  flex:1; background:transparent; border:none; outline:none;
+  color:var(--slate);
+  font-family:'DM Mono', monospace;
+  font-size:0.8rem; padding:0.65rem 0.85rem;
+}
+
+.url-input::placeholder { color:var(--muted2); }
+
+.btn-scan {
+  background:var(--blue); color:var(--white);
+  border:none; border-radius:9px;
+  padding:0.65rem 1.4rem;
+  font-size:0.875rem; font-weight:600;
+  cursor:pointer; transition:all 0.15s;
+  white-space:nowrap;
+  box-shadow:0 2px 8px rgba(59,110,248,0.22);
+}
+
+.btn-scan:hover {
+  background:var(--blue-dk);
+  box-shadow:0 4px 14px rgba(59,110,248,0.32);
+  transform:translateY(-1px);
+}
+
+.btn-scan:active { transform:translateY(0); }
+
+.scan-hint {
+  font-size:0.72rem; color:var(--muted2);
+  font-family:'DM Mono', monospace;
+  margin-top:0.65rem;
+}
+
+/* Loading */
+.loading-state { display:none; text-align:center; padding:2.5rem 1rem; }
+
+.loader {
+  width:38px; height:38px;
+  border:2.5px solid var(--blue-lt);
+  border-top-color:var(--blue);
+  border-radius:50%;
+  animation:spin 0.85s linear infinite;
+  margin:0 auto 0.9rem;
+}
+
+@keyframes spin { to { transform:rotate(360deg); } }
+
+.loading-state p { font-size:0.8rem; color:var(--muted2); font-family:'DM Mono',monospace; }
+
+/* Result */
+#result-panel { display:none; margin-top:1.6rem; animation:rise 0.3s ease; }
+
+@keyframes rise {
+  from { opacity:0; transform:translateY(8px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+.result-rule { height:1px; background:var(--border); margin-bottom:1.4rem; }
+
+.result-top { display:flex; align-items:flex-start; gap:0.85rem; margin-bottom:1.1rem; }
+
+.r-pill {
+  font-size:0.68rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.07em;
+  padding:0.26rem 0.7rem; border-radius:100px;
+  flex-shrink:0; margin-top:4px;
+}
+
+.p-HIGH   { background:var(--rose-lt);  color:var(--rose);  }
+.p-MEDIUM { background:var(--amber-lt); color:var(--amber); }
+.p-LOW    { background:var(--green-lt); color:var(--green); }
+
+.r-product {
+  font-family:'Playfair Display', serif;
+  font-size:1.25rem; font-weight:600;
+  color:var(--slate); line-height:1.25;
+}
+
+.r-meta {
+  display:flex; gap:0.75rem; align-items:center;
+  font-family:'DM Mono', monospace;
+  font-size:0.71rem; color:var(--muted2);
+  margin-top:0.28rem;
+}
+
+.r-price { color:var(--blue); font-weight:600; }
+
+.meter { margin:1.1rem 0; }
+
+.meter-head {
+  display:flex; justify-content:space-between;
+  font-size:0.71rem; color:var(--muted2);
+  font-family:'DM Mono', monospace;
+  margin-bottom:0.45rem;
+}
+
+.meter-bg {
+  height:5px; background:var(--bg2);
+  border-radius:100px; overflow:hidden;
+}
+
+.meter-bar {
+  height:100%; border-radius:100px;
+  background:linear-gradient(90deg, var(--blue), #7c3aed);
+  transition:width 1.1s cubic-bezier(.4,0,.2,1);
+  width:0%;
+}
+
+.box {
+  border-radius:var(--r);
+  padding:0.95rem 1.1rem;
+  margin:0.7rem 0;
+  font-size:0.875rem; line-height:1.68;
+}
+
+.box-warn {
+  background:#fff8f8;
+  border:1px solid #fecdd3;
+  color:var(--slate);
+}
+
+.box-warn .sub {
+  display:block; font-size:0.77rem;
+  color:var(--muted); margin-top:0.35rem;
+}
+
+.box-tip {
+  background:var(--blue-lt);
+  border:1px solid var(--blue-mid);
+  color:var(--muted);
+  display:flex; gap:0.65rem;
+}
+
+.box-tip .ico { flex-shrink:0; margin-top:1px; }
+
+.timer-row {
+  display:flex; align-items:center; gap:0.85rem;
+  background:var(--bg); border:1px solid var(--border);
+  border-radius:var(--r); padding:0.8rem 1rem;
+  margin:0.7rem 0;
+}
+
+.t-label {
+  font-size:0.66rem; color:var(--muted2);
+  font-family:'DM Mono', monospace;
+  text-transform:uppercase; letter-spacing:0.07em;
+}
+
+.t-val {
+  font-family:'DM Mono', monospace;
+  font-size:1rem; font-weight:600;
+  color:var(--amber); margin-top:2px;
+}
+
+.t-note { font-size:0.68rem; color:var(--muted2); margin-left:auto; font-family:'DM Mono',monospace; }
+
+.actions { display:flex; gap:0.5rem; margin-top:1.1rem; }
+
+.btn-block {
+  flex:2; background:var(--blue); color:var(--white);
+  border:none; border-radius:var(--r);
+  padding:0.875rem; font-size:0.9rem; font-weight:600;
+  cursor:pointer; transition:all 0.15s;
+  box-shadow:0 2px 10px rgba(59,110,248,0.22);
+}
+
+.btn-block:hover {
+  background:var(--blue-dk);
+  box-shadow:0 6px 20px rgba(59,110,248,0.32);
+  transform:translateY(-1px);
+}
+
+.btn-pass {
+  flex:1; background:transparent;
+  border:1.5px solid var(--border2);
+  border-radius:var(--r); padding:0.875rem;
+  font-size:0.82rem; color:var(--muted);
+  cursor:pointer; transition:all 0.15s;
+}
+
+.btn-pass:hover { color:var(--slate); border-color:var(--muted2); background:var(--bg); }
+
+/* Confirmed */
+#blocked-conf {
+  display:none; text-align:center;
+  padding:2.5rem 1rem;
+  animation:rise 0.35s ease;
+}
+
+#blocked-conf .conf-icon { font-size:2.2rem; display:block; margin-bottom:0.75rem; }
+
+#blocked-conf h3 {
+  font-family:'Playfair Display', serif;
+  font-size:1.7rem; font-weight:700;
+  color:var(--slate); margin-bottom:0.45rem;
+}
+
+.saved-tag {
+  display:inline-block;
+  background:var(--green-lt); border:1px solid #6ee7b7;
+  color:var(--green);
+  font-family:'DM Mono', monospace;
+  font-size:0.95rem; font-weight:600;
+  padding:0.42rem 1.2rem; border-radius:100px;
+  margin:0.7rem 0;
+}
+
+#blocked-conf p { font-size:0.875rem; color:var(--muted); }
+
+/* ── STATS STRIP ── */
+.stats-strip {
+  display:flex;
+  max-width:520px; margin:0 auto 5rem;
+  padding:0 1.5rem;
+  background:var(--white); border:1px solid var(--border);
+  border-radius:var(--r-lg);
+  box-shadow:var(--shadow);
+  overflow:hidden; position:relative; z-index:1;
+}
+
+.s-cell {
+  flex:1; padding:1.3rem 1rem;
+  text-align:center;
+  border-right:1px solid var(--border);
+}
+
+.s-cell:last-child { border:none; }
+
+.s-val {
+  display:block;
+  font-family:'Playfair Display', serif;
+  font-size:1.7rem; font-weight:700;
+  color:var(--slate); line-height:1;
+}
+
+.s-val.blue  { color:var(--blue); }
+.s-val.green { color:var(--green); }
+.s-val.slate { color:var(--slate2); }
+
+.s-lbl {
+  display:block; font-size:0.67rem;
+  color:var(--muted2); text-transform:uppercase;
+  letter-spacing:0.08em; font-weight:600;
+  margin-top:0.32rem;
+}
+
+/* ── SECTION ── */
+.section {
+  position:relative; z-index:1;
+  max-width:940px; margin:0 auto;
+  padding:4.5rem 2rem;
+}
+
+.s-eyebrow {
+  font-size:0.7rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.14em;
+  color:var(--blue); margin-bottom:0.75rem;
+}
+
+.s-heading {
+  font-family:'Playfair Display', serif;
+  font-size:clamp(1.7rem, 3.5vw, 2.5rem);
+  font-weight:700; color:var(--slate);
+  line-height:1.2; letter-spacing:-0.3px;
+  margin-bottom:2.5rem;
+}
+
+.s-heading em { font-style:italic; color:var(--blue); }
+
+/* Steps */
+.steps { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1.1rem; }
+
+.step {
+  background:var(--white); border:1px solid var(--border);
+  border-radius:var(--r-lg); padding:1.7rem 1.5rem;
+  box-shadow:var(--shadow-sm);
+  transition:all 0.2s;
+  position:relative; overflow:hidden;
+}
+
+.step:hover { transform:translateY(-3px); box-shadow:var(--shadow); border-color:var(--blue-mid); }
+
+.step-n {
+  display:inline-block;
+  font-family:'DM Mono', monospace;
+  font-size:0.65rem; font-weight:600;
+  color:var(--blue); background:var(--blue-lt);
+  padding:0.18rem 0.55rem; border-radius:4px;
+  margin-bottom:1rem; letter-spacing:0.08em;
+}
+
+.step-ico { font-size:1.7rem; display:block; margin-bottom:0.9rem; }
+
+.step h3 { font-weight:600; font-size:0.95rem; color:var(--slate); margin-bottom:0.4rem; }
+.step p  { font-size:0.83rem; color:var(--muted); line-height:1.65; }
+
+/* Testimonials */
+.testi-bg {
+  background:var(--bg2);
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+}
+
+.testis { display:grid; grid-template-columns:repeat(auto-fit,minmax(255px,1fr)); gap:1.1rem; }
+
+.testi {
+  background:var(--white); border:1px solid var(--border);
+  border-radius:var(--r-lg); padding:1.5rem;
+  box-shadow:var(--shadow-sm); transition:all 0.2s;
+}
+
+.testi:hover { transform:translateY(-2px); box-shadow:var(--shadow); }
+
+.stars { color:#f59e0b; font-size:0.82rem; margin-bottom:0.75rem; letter-spacing:0.1em; }
+
+.testi-text {
+  font-family:'Playfair Display', serif;
+  font-size:0.88rem; font-style:italic;
+  color:var(--muted); line-height:1.75;
+  margin-bottom:1.1rem;
+}
+
+.testi-text strong { color:var(--green); font-style:normal; font-weight:600; }
+
+.t-author { display:flex; align-items:center; gap:0.65rem; }
+
+.t-avatar {
+  width:34px; height:34px; border-radius:50%;
+  background:linear-gradient(135deg, var(--blue), #6366f1);
+  display:flex; align-items:center; justify-content:center;
+  font-size:0.88rem; flex-shrink:0;
+  box-shadow:0 2px 8px rgba(59,110,248,0.2);
+}
+
+.t-name { font-size:0.85rem; font-weight:600; color:var(--slate); }
+.t-role { font-size:0.7rem; color:var(--muted2); }
+
+/* Pricing */
+.plans { display:grid; grid-template-columns:repeat(auto-fit,minmax(235px,1fr)); gap:1.1rem; }
+
+.plan {
+  background:var(--white); border:1px solid var(--border);
+  border-radius:var(--r-xl); padding:2rem 1.8rem;
+  box-shadow:var(--shadow-sm); transition:all 0.2s;
+  position:relative;
+}
+
+.plan:hover { transform:translateY(-3px); box-shadow:var(--shadow); }
+
+.plan.hot {
+  border-color:var(--blue);
+  background:linear-gradient(160deg, #fafbff 0%, #eef2ff 100%);
+  box-shadow:0 0 0 1px rgba(59,110,248,0.12), var(--shadow);
+}
+
+.hot-badge {
+  position:absolute; top:-1px; left:50%; transform:translateX(-50%);
+  background:var(--blue); color:var(--white);
+  font-size:0.6rem; font-weight:700; letter-spacing:0.1em;
+  text-transform:uppercase; padding:0.22rem 0.85rem;
+  border-radius:0 0 9px 9px;
+}
+
+.plan-name { font-weight:600; font-size:0.875rem; color:var(--muted); }
+
+.plan-price {
+  font-family:'Playfair Display', serif;
+  font-size:2.9rem; font-weight:700;
+  color:var(--slate); line-height:1.05;
+  margin:0.7rem 0 0.15rem; letter-spacing:-1px;
+}
+
+.plan-price sub {
+  font-family:'DM Sans', sans-serif;
+  font-size:0.95rem; font-weight:400;
+  vertical-align:baseline; color:var(--muted2);
+  letter-spacing:0;
+}
+
+.plan-tagline { font-size:0.78rem; color:var(--muted2); margin-bottom:1.4rem; }
+
+.plan-rule { height:1px; background:var(--border); margin-bottom:1.2rem; }
+
+.plan-features { list-style:none; margin-bottom:1.7rem; }
+
+.plan-features li {
+  display:flex; align-items:center; gap:0.55rem;
+  font-size:0.865rem; color:var(--muted);
+  padding:0.38rem 0;
+  border-bottom:1px solid var(--border);
+}
+
+.plan-features li:last-child { border:none; }
+.f-y { color:var(--green); font-size:0.78rem; font-weight:700; }
+.f-n { color:var(--border2); font-size:0.78rem; }
+
+.btn-p {
+  width:100%; padding:0.875rem;
+  border-radius:var(--r); font-size:0.875rem;
+  font-weight:600; cursor:pointer;
+  transition:all 0.15s; border:none;
+}
+
+.btn-p-free {
+  background:var(--bg2); color:var(--muted);
+  border:1.5px solid var(--border2);
+}
+.btn-p-free:hover { background:var(--bg); color:var(--slate); }
+
+.btn-p-pro {
+  background:var(--blue); color:var(--white);
+  box-shadow:0 2px 10px rgba(59,110,248,0.25);
+}
+.btn-p-pro:hover {
+  background:var(--blue-dk);
+  box-shadow:0 6px 20px rgba(59,110,248,0.35);
+  transform:translateY(-1px);
+}
+
+.btn-p-fam {
+  background:#eff6ff; color:#1d4ed8;
+  border:1.5px solid #bfdbfe;
+}
+.btn-p-fam:hover { background:#dbeafe; }
+
+/* Footer */
+footer {
+  position:relative; z-index:1;
+  border-top:1px solid var(--border);
+  background:var(--white);
+  padding:1.8rem 2rem;
+  text-align:center;
+}
+
+footer p { font-size:0.78rem; color:var(--muted2); }
+footer a { color:var(--blue); text-decoration:none; }
+footer a:hover { text-decoration:underline; }
+
+/* Toast */
+.toast {
+  position:fixed; bottom:1.8rem; right:1.8rem;
+  background:var(--white); border:1px solid var(--border2);
+  border-radius:var(--r); padding:0.85rem 1.3rem;
+  font-size:0.82rem; font-weight:500; color:var(--slate);
+  z-index:9999;
+  transform:translateY(70px); opacity:0;
+  transition:all 0.3s cubic-bezier(.4,0,.2,1);
+  box-shadow:var(--shadow-lg);
+  display:flex; align-items:center; gap:0.5rem;
+}
+
+.toast.show { transform:translateY(0); opacity:1; }
+
+/* Upgrade modal */
+.modal-overlay {
+  display:none; position:fixed; inset:0; z-index:500;
+  background:rgba(30,34,53,0.5); backdrop-filter:blur(4px);
+  justify-content:center; align-items:center; padding:1rem;
+}
+
+.modal-overlay.open { display:flex; }
+
+.modal {
+  background:var(--white); border-radius:var(--r-xl);
+  padding:2rem; max-width:420px; width:100%;
+  box-shadow:var(--shadow-lg); animation:rise 0.25s ease;
+}
+
+.modal h3 {
+  font-family:'Playfair Display', serif;
+  font-size:1.4rem; font-weight:700; color:var(--slate);
+  margin-bottom:0.5rem;
+}
+
+.modal p { font-size:0.875rem; color:var(--muted); margin-bottom:1.5rem; line-height:1.65; }
+
+.modal-actions { display:flex; gap:0.6rem; }
+
+.btn-modal-upgrade {
+  flex:2; background:var(--blue); color:var(--white);
+  border:none; border-radius:var(--r);
+  padding:0.875rem; font-size:0.9rem; font-weight:600;
+  cursor:pointer; transition:all 0.15s;
+  box-shadow:0 2px 10px rgba(59,110,248,0.22);
+}
+
+.btn-modal-upgrade:hover { background:var(--blue-dk); }
+
+.btn-modal-cancel {
+  flex:1; background:var(--bg2); color:var(--muted);
+  border:1.5px solid var(--border2);
+  border-radius:var(--r); padding:0.875rem;
+  font-size:0.875rem; cursor:pointer; transition:all 0.15s;
+}
+
+.btn-modal-cancel:hover { color:var(--slate); }
+
+@media (max-width:640px) {
+  nav { padding:0 1.2rem; }
+  .nav-link { display:none; }
+  .stats-strip { flex-wrap:wrap; }
+  .s-cell { min-width:50%; border-bottom:1px solid var(--border); }
+  .s-cell:nth-child(3) { border-bottom:none; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="logo-link">
+    <img src="/static/logo.jpg" alt="TreatBlocker" class="logo-img">
+    <span class="logo-name">Treat<span>Blocker</span></span>
+  </a>
+  <div class="nav-right">
+    <a href="#how-it-works" class="nav-link">How it works</a>
+    <a href="#pricing" class="nav-link">Pricing</a>
+    <a href="/dashboard" class="nav-link">Dashboard</a>
+    <a href="#pricing" class="nav-btn">Try free →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">
+    <div class="eyebrow-dot"></div>
+    AI-powered impulse buy scanner
+  </div>
+  <h1>Stop the impulse.<br>Keep the <em>money.</em></h1>
+  <p>Paste any shopping link and get an honest AI read on your regret risk — before your wallet takes the hit.</p>
+</section>
+
+<!-- SCAN CARD -->
+<div class="scan-wrap">
+  <div class="scan-card">
+    <div class="card-label">Scan a URL</div>
+
+    <div class="input-shell">
+      <input type="url" id="url-input" class="url-input"
+        placeholder="https://amazon.com/something-tempting..."
+        autocomplete="off" />
+      <button class="btn-scan" onclick="doScan()">Scan it</button>
+    </div>
+    <p class="scan-hint">Amazon · DoorDash · Shein · Shopify · Target · and more</p>
+
+    <!-- Loading -->
+    <div class="loading-state" id="loading">
+      <div class="loader"></div>
+      <p>Checking regret risk…</p>
+    </div>
+
+    <!-- Result -->
+    <div id="result-panel">
+      <div class="result-rule"></div>
+      <div class="result-top">
+        <div class="r-pill p-HIGH" id="r-pill">— risk</div>
+        <div>
+          <div class="r-product" id="r-product">—</div>
+          <div class="r-meta">
+            <span id="r-platform">—</span>
+            <span class="r-price" id="r-price"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="meter">
+        <div class="meter-head">
+          <span>Regret risk score</span>
+          <span id="r-score">—</span>
+        </div>
+        <div class="meter-bg">
+          <div class="meter-bar" id="meter-bar"></div>
+        </div>
+      </div>
+
+      <div class="box box-warn">
+        <span id="r-msg"></span>
+        <span class="sub" id="r-reason"></span>
+      </div>
+
+      <div class="box box-tip">
+        <span class="ico">💡</span>
+        <span id="r-tip"></span>
+      </div>
+
+      <div class="timer-row">
+        <span style="font-size:1.1rem">⏳</span>
+        <div style="flex:1">
+          <div class="t-label">Cooling period</div>
+          <div class="t-val" id="r-timer">24:00:00</div>
+        </div>
+        <span class="t-note">starts on block</span>
+      </div>
+
+      <div class="actions">
+        <button class="btn-block" id="btn-block" onclick="doBlock()">
+          Block it — protect the money
+        </button>
+        <button class="btn-pass" onclick="doPass()">Buy anyway</button>
+      </div>
+    </div>
+
+    <!-- Confirmed -->
+    <div id="blocked-conf">
+      <span class="conf-icon">✅</span>
+      <h3>Nicely done.</h3>
+      <div class="saved-tag" id="saved-tag">$0 protected</div>
+      <p>Come back in 24 hours. If you still want it — it's real.</p>
+      <p style="margin-top:0.3rem;font-size:0.78rem;color:var(--muted2)">70% of people are glad they waited.</p>
+    </div>
+  </div>
+</div>
+
+<!-- STATS STRIP -->
+<div class="stats-strip">
+  <div class="s-cell">
+    <span class="s-val green" id="st-saved">$0</span>
+    <span class="s-lbl">Saved this week</span>
+  </div>
+  <div class="s-cell">
+    <span class="s-val blue" id="st-blocks">0</span>
+    <span class="s-lbl">Buys blocked</span>
+  </div>
+  <div class="s-cell">
+    <span class="s-val slate" id="st-rate">—</span>
+    <span class="s-lbl">Success rate</span>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how-it-works">
+  <div class="s-eyebrow">How it works</div>
+  <h2 class="s-heading">From impulse to intention<br>in <em>15 seconds.</em></h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-n">Step 01</div>
+      <span class="step-ico">🔗</span>
+      <h3>Paste any URL</h3>
+      <p>Amazon, DoorDash, Shein, Shopify — wherever the urge strikes.</p>
+    </div>
+    <div class="step">
+      <div class="step-n">Step 02</div>
+      <span class="step-ico">🧠</span>
+      <h3>AI scores it</h3>
+      <p>Claude analyses product, price, platform and your history to calculate real regret risk.</p>
+    </div>
+    <div class="step">
+      <div class="step-n">Step 03</div>
+      <span class="step-ico">🌙</span>
+      <h3>Sleep on it</h3>
+      <p>One click starts a 24-hour cooling window — the pause that saves most people most often.</p>
+    </div>
+    <div class="step">
+      <div class="step-n">Step 04</div>
+      <span class="step-ico">📊</span>
+      <h3>Watch savings grow</h3>
+      <p>Your dashboard tracks every dollar protected. Week-one average: $189 back.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<div class="testi-bg">
+  <section class="section">
+    <div class="s-eyebrow">Real users</div>
+    <h2 class="s-heading">Utah devs. Boston moms.<br><em>TikTok scrollers.</em></h2>
+    <div class="testis">
+      <div class="testi">
+        <div class="stars">★★★★★</div>
+        <p class="testi-text">"DoorDash was $23/week. Then it was $267. Three weeks in: <strong>$189 back.</strong> It showed me the pattern I couldn't see myself."</p>
+        <div class="t-author">
+          <div class="t-avatar">🧑‍💻</div>
+          <div>
+            <div class="t-name">Jake M.</div>
+            <div class="t-role">Senior Engineer · Silicon Slopes, UT</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi">
+        <div class="stars">★★★★★</div>
+        <p class="testi-text">"Target was my weakness. Three kids means 3× the needs. Blocked 11 trips last month — <strong>$340 saved.</strong> For real."</p>
+        <div class="t-author">
+          <div class="t-avatar">👩</div>
+          <div>
+            <div class="t-name">Sarah K.</div>
+            <div class="t-role">Mom of 3 · Newton, MA</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi">
+        <div class="stars">★★★★★</div>
+        <p class="testi-text">"Adding to cart at 2am from TikTok. The AI <strong>called me out mid-scroll.</strong> I laughed, closed the tab, went to sleep."</p>
+        <div class="t-author">
+          <div class="t-avatar">🧑</div>
+          <div>
+            <div class="t-name">DeShawn T.</div>
+            <div class="t-role">Remote PM · Chicago, IL</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- PRICING -->
+<section class="section" id="pricing">
+  <div class="s-eyebrow">Pricing</div>
+  <h2 class="s-heading">Save $200 a month<br>for <em>$4.99.</em></h2>
+  <div class="plans">
+
+    <div class="plan">
+      <div class="plan-name">Free</div>
+      <div class="plan-price">$0</div>
+      <div class="plan-tagline">No card required. Always free.</div>
+      <div class="plan-rule"></div>
+      <ul class="plan-features">
+        <li><span class="f-y">✓</span> 3 URL scans per day</li>
+        <li><span class="f-y">✓</span> Regret risk score</li>
+        <li><span class="f-y">✓</span> Basic savings tracker</li>
+        <li><span class="f-n">–</span> Unlimited scans</li>
+        <li><span class="f-n">–</span> AI spending insights</li>
+        <li><span class="f-n">–</span> Family mode</li>
+      </ul>
+      <button class="btn-p btn-p-free" onclick="scrollTop()">Get started free</button>
+    </div>
+
+    <div class="plan hot">
+      <div class="hot-badge">Most popular</div>
+      <div class="plan-name">Pro</div>
+      <div class="plan-price">$4.99 <sub>/mo</sub></div>
+      <div class="plan-tagline">Less than one DoorDash order.</div>
+      <div class="plan-rule"></div>
+      <ul class="plan-features">
+        <li><span class="f-y">✓</span> Unlimited scans</li>
+        <li><span class="f-y">✓</span> Full AI analysis</li>
+        <li><span class="f-y">✓</span> Spending pattern insights</li>
+        <li><span class="f-y">✓</span> Family mode · 4 devices</li>
+        <li><span class="f-y">✓</span> Weekly savings report</li>
+        <li><span class="f-y">✓</span> Priority support</li>
+      </ul>
+      <button class="btn-p btn-p-pro" onclick="startCheckout('pro')">Get Pro — $4.99 / mo</button>
+    </div>
+
+    <div class="plan">
+      <div class="plan-name">Family</div>
+      <div class="plan-price">$9.99 <sub>/mo</sub></div>
+      <div class="plan-tagline">One household, one subscription.</div>
+      <div class="plan-rule"></div>
+      <ul class="plan-features">
+        <li><span class="f-y">✓</span> Everything in Pro</li>
+        <li><span class="f-y">✓</span> Up to 6 devices</li>
+        <li><span class="f-y">✓</span> Shared savings goals</li>
+        <li><span class="f-y">✓</span> Family leaderboard</li>
+        <li><span class="f-y">✓</span> Kids mode</li>
+        <li><span class="f-y">✓</span> Custom block rules</li>
+      </ul>
+      <button class="btn-p btn-p-fam" onclick="startCheckout('family')">Get Family plan</button>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <p>
+    Built by <a href="#">MAnime LA</a>
+    &nbsp;·&nbsp; <a href="/dashboard">Dashboard</a>
+    &nbsp;·&nbsp; <a href="#">Privacy Policy</a>
+  </p>
+</footer>
+
+<!-- UPGRADE MODAL -->
+<div class="modal-overlay" id="upgrade-modal">
+  <div class="modal">
+    <h3>Upgrade to Pro</h3>
+    <p>You've reached the 3 scan limit for the free plan today. Upgrade to Pro for unlimited scans, AI spending insights, and family mode — all for $4.99/mo.</p>
+    <div class="modal-actions">
+      <button class="btn-modal-upgrade" onclick="startCheckout('pro')">Upgrade — $4.99 / mo</button>
+      <button class="btn-modal-cancel" onclick="closeModal()">Not now</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let blockId    = null;
+let blockPrice = 0;
+
+function toast(msg, icon = '✓') {
+  const t = document.getElementById('toast');
+  t.innerHTML = `<span>${icon}</span>${msg}`;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+function show(id)  { document.getElementById(id).style.display = 'block'; }
+function hide(id)  { document.getElementById(id).style.display = 'none';  }
+function closeModal() { document.getElementById('upgrade-modal').classList.remove('open'); }
+
+async function doScan() {
+  const url = document.getElementById('url-input').value.trim();
+  if (!url) { toast('Paste a URL first', '⚠️'); return; }
+
+  hide('result-panel'); hide('blocked-conf');
+  show('loading');
+
+  try {
+    const res  = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    });
+    const data = await res.json();
+
+    if (res.status === 403 && data.error === 'free_limit') {
+      document.getElementById('upgrade-modal').classList.add('open');
+      return;
+    }
+
+    if (data.success) {
+      renderResult(data);
+      if (data.stats) updateStrip(data.stats);
+    }
+  } catch(e) {
+    toast('Connection error — try again', '⚠️');
+  } finally {
+    hide('loading');
+  }
+}
+
+function renderResult(data) {
+  const a = data.analysis;
+  blockId    = data.block_id;
+  blockPrice = a.estimated_price || 0;
+
+  const pill = document.getElementById('r-pill');
+  pill.className = 'r-pill p-' + a.risk_level;
+  pill.textContent = (a.emoji || '') + ' ' + a.risk_level.toLowerCase() + ' risk';
+
+  document.getElementById('r-product').textContent  = a.product_name || 'Unknown product';
+  document.getElementById('r-platform').textContent = a.platform || '—';
+  document.getElementById('r-price').textContent    = a.estimated_price > 0 ? `~$${a.estimated_price}` : '';
+  document.getElementById('r-score').textContent    = a.risk_score + '%';
+  document.getElementById('r-msg').textContent      = a.regret_message || '';
+  document.getElementById('r-reason').textContent   = a.regret_reason  || '';
+  document.getElementById('r-tip').textContent      = a.savings_tip    || '';
+  document.getElementById('r-timer').textContent    = `${a.wait_hours || 24}:00:00`;
+
+  if (blockPrice > 0)
+    document.getElementById('btn-block').textContent = `Block it — protect $${blockPrice}`;
+
+  setTimeout(() => {
+    document.getElementById('meter-bar').style.width = a.risk_score + '%';
+  }, 80);
+
+  show('result-panel');
+}
+
+function updateStrip(s) {
+  if (s.total_saved  !== undefined) document.getElementById('st-saved').textContent  = '$' + s.total_saved;
+  if (s.blocks_today !== undefined) document.getElementById('st-blocks').textContent = s.blocks_today;
+}
+
+function doBlock() {
+  hide('result-panel');
+  show('blocked-conf');
+  document.getElementById('saved-tag').textContent = blockPrice > 0 ? `$${blockPrice} protected` : 'Blocked';
+  toast('Blocked. Your future self will thank you.', '✅');
+  loadStats();
+}
+
+async function doPass() {
+  if (blockId) {
+    try {
+      await fetch('/api/override', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ block_id: blockId })
+      });
+    } catch(e) {}
+  }
+  toast('Recorded. No judgment here.', '👍');
+  hide('result-panel');
+  document.getElementById('url-input').value = '';
+}
+
+async function startCheckout(plan) {
+  closeModal();
+  toast('Redirecting to payment…', '💳');
+  try {
+    const res  = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan })
+    });
+    const data = await res.json();
+    if (data.payLink) window.location.href = data.payLink;
+    else toast('Payment error — try again', '⚠️');
+  } catch(e) {
+    toast('Connection error', '⚠️');
+  }
+}
+
+async function loadStats() {
+  try {
+    const res  = await fetch('/api/stats');
+    const data = await res.json();
+    document.getElementById('st-saved').textContent  = '$' + data.week_saved;
+    document.getElementById('st-blocks').textContent = data.total_blocks;
+    document.getElementById('st-rate').textContent   = data.success_rate + '%';
+  } catch(e) {}
+}
+
+function scrollTop() {
+  document.getElementById('url-input').focus();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+document.getElementById('url-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doScan();
+});
+
+loadStats();
+</script>
+</body>
+</html>
