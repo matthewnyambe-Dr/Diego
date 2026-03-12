@@ -16,7 +16,7 @@ app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
 # CONFIG — fill these in after deploying
 # ─────────────────────────────────────────
 OXAPAY_MERCHANT_KEY = os.environ.get('OXAPAY_MERCHANT_KEY', 'EEN3JK-5CNPH8-1C7XFJ-WX6WLT')
-OXAPAY_API           = 'https://api.oxapay.com/v1'
+OXAPAY_API           = 'https://api.oxapay.com/v1' # Check if this needs to be https://api.oxapay.com/v1/merchant or similar
 OPENROUTER_API_KEY   = os.environ.get('OPENROUTER_API_KEY', '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')
 OPENROUTER_API       = 'https://openrouter.ai/api/v1/chat/completions'
 # YOUR Replit URL — update this after you deploy
@@ -68,23 +68,30 @@ def create_checkout():
 
     # Prepare payload for OxaPay Generate Invoice API
     payload = {
-        "merchant_api_key": OXAPAY_MERCHANT_KEY,
+        "merchant":         OXAPAY_MERCHANT_KEY,
         "amount":           plan['price'],
         "currency":         plan['currency'],
         "lifetime":         30,
-        "fee_paid_by_payer": 1,
-        "under_paid_coverage": 2.5,
-        "callback_url":     f"{SITE_URL}/api/webhook/oxapay",
-        "return_url":       f"{SITE_URL}/dashboard",
+        "feePaidByPayer":   1,
+        "underPaidCoverage": 2.5,
+        "callbackUrl":      f"{SITE_URL}/api/webhook/oxapay",
+        "returnUrl":        f"{SITE_URL}/dashboard",
         "description":      f"TreatBlocker {plan['name']} Plan",
-        "order_id":         f"{user_id}:{plan_id}:{uuid.uuid4().hex[:8]}",
-        "sandbox":          SANDBOX_MODE
+        "orderId":          f"{user_id}:{plan_id}:{uuid.uuid4().hex[:8]}"
     }
 
+    # Determine endpoint based on sandbox mode
+    endpoint = f"{OXAPAY_API}/merchants/request" if not SANDBOX_MODE else f"{OXAPAY_API}/sandbox/request"
+    if SANDBOX_MODE:
+        payload["merchant"] = "sandbox" # Sandbox mode often uses "sandbox" as key
+    
     req = urllib.request.Request(
-        f"{OXAPAY_API}/payment/invoice",
+        endpoint,
         data=json.dumps(payload).encode('utf-8'),
-        headers={'Content-Type': 'application/json'},
+        headers={
+            'Content-Type': 'application/json',
+            'User-Agent': 'TreatBlocker/1.0'
+        },
         method='POST'
     )
 
@@ -92,17 +99,22 @@ def create_checkout():
         with urllib.request.urlopen(req, timeout=15) as resp:
             result = json.loads(resp.read().decode('utf-8'))
 
-        # OxaPay returns message "success" or similar, check result code
-        if result.get('message') == 'success' or result.get('status') == 200:
+        # OxaPay returns message "success" or status 200/100
+        status_code = result.get('status')
+        if result.get('message') == 'success' or status_code in [200, 100]:
+            pay_link = result.get('payLink') or result.get('address')
+            if not pay_link:
+                return jsonify({'error': 'No payment link returned from OxaPay', 'debug': result}), 400
+            
             return jsonify({
                 'success':  True,
-                'payLink':  result.get('payLink') or result.get('address'), # address for some types, payLink for invoice
+                'payLink':  pay_link,
                 'trackId':  result.get('trackId'),
                 'plan':     plan_id,
                 'sandbox':  SANDBOX_MODE
             })
         else:
-            return jsonify({'error': result.get('message', 'OxaPay error')}), 400
+            return jsonify({'error': result.get('message', 'OxaPay error'), 'debug': result}), 400
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
