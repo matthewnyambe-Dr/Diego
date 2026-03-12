@@ -25,7 +25,7 @@ OPENROUTER_API       = 'https://openrouter.ai/api/v1/chat/completions'
 SITE_URL            = os.environ.get('SITE_URL', 'https://YOUR-REPLIT-URL.repl.co')
 
 # Set to True while testing, False when you go live
-SANDBOX_MODE        = True
+SANDBOX_MODE        = False
 
 # ─────────────────────────────────────────
 # PLANS
