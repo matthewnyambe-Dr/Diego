@@ -4,6 +4,8 @@ import os
 import uuid
 import urllib.request
 import urllib.error
+import urllib.parse
+import base64
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
@@ -15,8 +17,9 @@ app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
 # ─────────────────────────────────────────
 # CONFIG — fill these in after deploying
 # ─────────────────────────────────────────
-OXAPAY_MERCHANT_KEY = os.environ.get('OXAPAY_MERCHANT_KEY', 'EEN3JK-5CNPH8-1C7XFJ-WX6WLT')
-OXAPAY_API           = 'https://api.oxapay.com/v1' # Check if this needs to be https://api.oxapay.com/v1/merchant or similar
+# Payment Provider Configuration (Stripe)
+STRIPE_API_KEY       = os.environ.get('STRIPE_API_KEY', 'sk_test_51234567890')
+STRIPE_API           = 'https://api.stripe.com/v1'
 OPENROUTER_API_KEY   = os.environ.get('OPENROUTER_API_KEY', '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')
 OPENROUTER_API       = 'https://openrouter.ai/api/v1/chat/completions'
 # YOUR Replit URL — update this after you deploy
@@ -51,7 +54,7 @@ def dashboard():
     return render_template('dashboard.html')
 
 # ─────────────────────────────────────────
-# OXAPAY — CREATE INVOICE
+# STRIPE — CREATE CHECKOUT SESSION
 # ─────────────────────────────────────────
 @app.route('/api/checkout', methods=['POST'])
 def create_checkout():
@@ -66,66 +69,61 @@ def create_checkout():
 
     plan = PLANS[plan_id]
 
-    # Prepare payload for OxaPay Generate Invoice API
-    payload = {
-        "merchant":         OXAPAY_MERCHANT_KEY,
-        "amount":           plan['price'],
-        "currency":         plan['currency'],
-        "lifetime":         30,
-        "feePaidByPayer":   1,
-        "underPaidCoverage": 2.5,
-        "callbackUrl":      f"{SITE_URL}/api/webhook/oxapay",
-        "returnUrl":        f"{SITE_URL}/dashboard",
-        "description":      f"TreatBlocker {plan['name']} Plan",
-        "orderId":          f"{user_id}:{plan_id}:{uuid.uuid4().hex[:8]}"
-    }
+    # Prepare payload for Stripe Checkout Session API
+    payload = urllib.parse.urlencode({
+        'payment_method_types[]': 'card',
+        'line_items[0][price_data][currency]': plan['currency'].lower(),
+        'line_items[0][price_data][unit_amount]': int(plan['price'] * 100),  # Convert to cents
+        'line_items[0][price_data][product_data][name]': f"TreatBlocker {plan['name']} Plan",
+        'line_items[0][quantity]': '1',
+        'mode': 'payment',
+        'success_url': f"{SITE_URL}/dashboard?session_id={{CHECKOUT_SESSION_ID}}",
+        'cancel_url': f"{SITE_URL}/#pricing",
+        'metadata[plan]': plan_id,
+        'metadata[user_id]': user_id,
+        'metadata[order_id]': f"{user_id}:{plan_id}:{uuid.uuid4().hex[:8]}"
+    }).encode('utf-8')
 
-    # Determine endpoint based on sandbox mode
-    endpoint = f"{OXAPAY_API}/merchants/request" if not SANDBOX_MODE else f"{OXAPAY_API}/sandbox/request"
-    if SANDBOX_MODE:
-        payload["merchant"] = "sandbox" # Sandbox mode often uses "sandbox" as key
+    endpoint = f"{STRIPE_API}/checkout/sessions"
+    
+    # Create Basic Auth header for Stripe
+    auth_string = base64.b64encode(f"{STRIPE_API_KEY}:".encode()).decode()
     
     req = urllib.request.Request(
         endpoint,
-        data=json.dumps(payload).encode('utf-8'),
+        data=payload,
         headers={
-            'Content-Type': 'application/json',
+            'Authorization': f'Basic {auth_string}',
+            'Content-Type': 'application/x-www-form-urlencoded',
             'User-Agent': 'TreatBlocker/1.0'
         },
         method='POST'
     )
 
     try:
-        print(f'[CHECKOUT] Making request to {endpoint}')
-        print(f'[CHECKOUT] Payload: {json.dumps(payload)}')
+        print(f'[CHECKOUT] Making Stripe request to {endpoint}')
+        print(f'[CHECKOUT] Plan: {plan_id}, User: {user_id}')
         with urllib.request.urlopen(req, timeout=15) as resp:
             result = json.loads(resp.read().decode('utf-8'))
-            print(f'[CHECKOUT] OxaPay response: {json.dumps(result)}')
+            print(f'[CHECKOUT] Stripe response: {json.dumps(result)}')
 
-        # OxaPay returns message "success" or status 200/100
-        status_code = result.get('status')
-        if result.get('message') == 'success' or status_code in [200, 100]:
-            pay_link = result.get('payLink') or result.get('address')
-            if not pay_link:
-                print(f'[CHECKOUT] No payment link in response: {result}')
-                return jsonify({'error': 'No payment link returned from OxaPay', 'debug': result}), 400
-            
-            print(f'[CHECKOUT] Success - returning payLink: {pay_link}')
+        # Stripe returns the session object with a url field
+        if result.get('url'):
+            print(f'[CHECKOUT] Success - returning checkout URL: {result["url"]}')
             return jsonify({
                 'success':  True,
-                'payLink':  pay_link,
-                'trackId':  result.get('trackId'),
-                'plan':     plan_id,
-                'sandbox':  SANDBOX_MODE
+                'payLink':  result.get('url'),
+                'sessionId': result.get('id'),
+                'plan':     plan_id
             })
         else:
-            print(f'[CHECKOUT] OxaPay error response: {result}')
-            return jsonify({'error': result.get('message', 'OxaPay error'), 'debug': result}), 400
+            print(f'[CHECKOUT] No URL in Stripe response: {result}')
+            return jsonify({'error': 'Failed to create checkout session', 'debug': result}), 400
 
     except urllib.error.HTTPError as e:
         error_body = e.read().decode('utf-8')
         print(f'[CHECKOUT] HTTP Error {e.code}: {error_body}')
-        return jsonify({'error': f'HTTP {e.code}: {error_body}'}), 500
+        return jsonify({'error': f'Payment provider error: {error_body}'}), 500
     except Exception as e:
         print(f'[CHECKOUT] Exception: {str(e)}')
         import traceback
@@ -133,32 +131,27 @@ def create_checkout():
         return jsonify({'error': str(e)}), 500
 
 # ─────────────────────────────────────────
-# OXAPAY — WEBHOOK
+# STRIPE — WEBHOOK
 # ─────────────────────────────────────────
 
-@app.route('/api/webhook/oxapay', methods=['POST'])
-def oxapay_webhook():
+@app.route('/api/webhook/stripe', methods=['POST'])
+def stripe_webhook():
     data = request.get_json(silent=True) or {}
-
-    # Skip merchant check in sandbox mode
-    if not SANDBOX_MODE:
-        # OxaPay webhook sends data, check for merchant_api_key or similar if needed
-        pass
-
-    status   = data.get('status')
-    order_id = data.get('order_id') or data.get('orderId', '')
-
-    if status == 'Paid':
-        # orderId format: user_id:plan_id:random — use maxsplit=2 to be safe
-        parts = order_id.split(':', 2)
-        if len(parts) >= 2:
-            user_id = parts[0].strip()
-            plan_id = parts[1].strip()
-            if plan_id in ('pro', 'family'):
-                subscriptions_db[user_id] = {
-                    'plan':    plan_id,
-                    'expires': (datetime.now() + timedelta(days=30)).isoformat()
-                }
+    
+    event_type = data.get('type')
+    event_data = data.get('data', {}).get('object', {})
+    
+    if event_type == 'checkout.session.completed':
+        metadata = event_data.get('metadata', {})
+        user_id = metadata.get('user_id')
+        plan_id = metadata.get('plan')
+        
+        if user_id and plan_id and plan_id in ('pro', 'family'):
+            subscriptions_db[user_id] = {
+                'plan':    plan_id,
+                'expires': (datetime.now() + timedelta(days=30)).isoformat()
+            }
+            print(f'[WEBHOOK] Subscription activated for user {user_id}: {plan_id}')
 
     return jsonify({'result': 100})
 
