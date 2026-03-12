@@ -96,16 +96,21 @@ def create_checkout():
     )
 
     try:
+        print(f'[CHECKOUT] Making request to {endpoint}')
+        print(f'[CHECKOUT] Payload: {json.dumps(payload)}')
         with urllib.request.urlopen(req, timeout=15) as resp:
             result = json.loads(resp.read().decode('utf-8'))
+            print(f'[CHECKOUT] OxaPay response: {json.dumps(result)}')
 
         # OxaPay returns message "success" or status 200/100
         status_code = result.get('status')
         if result.get('message') == 'success' or status_code in [200, 100]:
             pay_link = result.get('payLink') or result.get('address')
             if not pay_link:
+                print(f'[CHECKOUT] No payment link in response: {result}')
                 return jsonify({'error': 'No payment link returned from OxaPay', 'debug': result}), 400
             
+            print(f'[CHECKOUT] Success - returning payLink: {pay_link}')
             return jsonify({
                 'success':  True,
                 'payLink':  pay_link,
@@ -114,9 +119,17 @@ def create_checkout():
                 'sandbox':  SANDBOX_MODE
             })
         else:
+            print(f'[CHECKOUT] OxaPay error response: {result}')
             return jsonify({'error': result.get('message', 'OxaPay error'), 'debug': result}), 400
 
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode('utf-8')
+        print(f'[CHECKOUT] HTTP Error {e.code}: {error_body}')
+        return jsonify({'error': f'HTTP {e.code}: {error_body}'}), 500
     except Exception as e:
+        print(f'[CHECKOUT] Exception: {str(e)}')
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 # ─────────────────────────────────────────
