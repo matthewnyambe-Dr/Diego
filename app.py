@@ -17,7 +17,7 @@ app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
 # ─────────────────────────────────────────
 OXAPAY_MERCHANT_KEY = os.environ.get('OXAPAY_MERCHANT_KEY', 'EEN3JK-5CNPH8-1C7XFJ-WX6WLT')
 OXAPAY_API           = 'https://api.oxapay.com'
-OPENROUTER_API_KEY   = os.environ.get('OPENROUTER_API_KEY', 'YOUR_OPENROUTER_KEY_HERE')
+OPENROUTER_API_KEY   = os.environ.get('OPENROUTER_API_KEY', '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')
 OPENROUTER_API       = 'https://openrouter.ai/api/v1/chat/completions'
 # YOUR Replit URL — update this after you deploy
 SITE_URL            = os.environ.get('SITE_URL', 'https://diego-production-28d4.up.railway.app')
