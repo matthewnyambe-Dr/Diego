@@ -72,7 +72,9 @@ def create_checkout():
     plan = PLANS[plan_id]
 
     # Prepare payload for Oxapay Invoice API
-    payload = json.dumps({
+    # Some Oxapay endpoints require merchant_api_key in the body, some in headers.
+    # We'll provide it in both to be safe.
+    payload_dict = {
         'merchant_api_key': OXAPAY_MERCHANT_KEY,
         'amount': plan['price'],
         'currency': plan['currency'],
@@ -81,13 +83,15 @@ def create_checkout():
         'return_url': f"{SITE_URL}/dashboard",
         'description': f"TreatBlocker {plan['name']} Plan Subscription",
         'sandbox': SANDBOX_MODE
-    }).encode('utf-8')
+    }
+    payload = json.dumps(payload_dict).encode('utf-8')
 
     req = urllib.request.Request(
         OXAPAY_API_URL,
         data=payload,
         headers={
             'Content-Type': 'application/json',
+            'merchant_api_key': OXAPAY_MERCHANT_KEY,
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         },
         method='POST'
