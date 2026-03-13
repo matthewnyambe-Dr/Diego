@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'treatblocker-secret-2024')
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_COOKIE_SECURE']   = True
+app.config['SESSION_COOKIE_SECURE']   = False  # Set to False to ensure sessions work across all environments
 app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
 
 # ─────────────────────────────────────────
