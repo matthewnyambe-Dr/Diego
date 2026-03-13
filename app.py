@@ -16,7 +16,7 @@ app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
 # CONFIG — fill these in after deploying
 # ─────────────────────────────────────────
 OXAPAY_MERCHANT_KEY = os.environ.get('OXAPAY_MERCHANT_KEY', 'EEN3JK-5CNPH8-1C7XFJ-WX6WLT')
-OXAPAY_API           = 'https://api.oxapay.com/v1'
+OXAPAY_API           = 'https://api.oxapay.com'
 OPENROUTER_API_KEY   = os.environ.get('OPENROUTER_API_KEY', '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')
 OPENROUTER_API       = 'https://openrouter.ai/api/v1/chat/completions'
 # YOUR Replit URL — update this after you deploy
@@ -86,7 +86,10 @@ def create_checkout():
     req = urllib.request.Request(
         f"{OXAPAY_API}/merchants/request",
         data=payload,
-        headers={'Content-Type': 'application/json'},
+        headers={
+            'Content-Type': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        },
         method='POST'
     )
 
