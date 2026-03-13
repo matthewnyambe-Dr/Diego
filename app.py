@@ -4,50 +4,48 @@ import os
 import uuid
 import urllib.request
 import urllib.error
-import urllib.parse
-import base64
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'treatblocker-secret-2024')
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_COOKIE_SECURE']   = True
-app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
 
 # ─────────────────────────────────────────
 # CONFIG — fill these in after deploying
 # ─────────────────────────────────────────
-# Oxapay Configuration
+
 OXAPAY_MERCHANT_KEY = os.environ.get('OXAPAY_MERCHANT_KEY', 'EEN3JK-5CNPH8-1C7XFJ-WX6WLT')
-OXAPAY_API_URL      = 'https://api.oxapay.com/v1/payment/invoice'
+OXAPAY_API          = 'https://api.oxapay.com'
+
+# YOUR Replit URL — update this after you deploy
+SITE_URL            = os.environ.get('SITE_URL', 'https://diego-production-28d4.up.railway.app').rstrip('/')
+
+# Set to True while testing, False when you go live
+SANDBOX_MODE        = False
 
 OPENROUTER_API_KEY   = os.environ.get('OPENROUTER_API_KEY', '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')
 OPENROUTER_API       = 'https://openrouter.ai/api/v1/chat/completions'
 
-# YOUR Replit URL — update this after you deploy
-# Ensure SITE_URL has no trailing slash for Oxapay validation
-SITE_URL            = os.environ.get('SITE_URL', 'https://diego-production-28d4.up.railway.app').rstrip('/')
-# Set to True while testing, False when you go live
-SANDBOX_MODE        = False
-
 # ─────────────────────────────────────────
 # PLANS
 # ─────────────────────────────────────────
+
 PLANS = {
-    'pro':    {'name': 'Pro',    'price': 4.99,  'currency': 'USD'},
-    'family': {'name': 'Family', 'price': 9.99,  'currency': 'USD'},
+    'pro':    {'name': 'Pro',    'price': 4.99,  'currency': 'USDT'},
+    'family': {'name': 'Family', 'price': 9.99,  'currency': 'USDT'},
 }
 
 # ─────────────────────────────────────────
 # IN-MEMORY STORAGE
 # (swap for a real DB like SQLite later)
 # ─────────────────────────────────────────
+
 blocks_db        = {}
 subscriptions_db = {}
 
 # ─────────────────────────────────────────
 # PAGES
 # ─────────────────────────────────────────
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -57,85 +55,63 @@ def dashboard():
     return render_template('dashboard.html')
 
 # ─────────────────────────────────────────
-# OXAPAY — CREATE CHECKOUT SESSION
+# OXAPAY — CREATE INVOICE
 # ─────────────────────────────────────────
+
 @app.route('/api/checkout', methods=['POST'])
 def create_checkout():
     data    = request.json
     plan_id = data.get('plan')
     user_id = session.get('user_id', str(uuid.uuid4()))
     session['user_id'] = user_id
-    session.permanent = True
 
     if plan_id not in PLANS:
         return jsonify({'error': 'Invalid plan'}), 400
 
     plan = PLANS[plan_id]
 
-    # Prepare payload for Oxapay Invoice API
-    # Some Oxapay endpoints require merchant_api_key in the body, some in headers.
-    # We'll provide it in both to be safe.
-    payload_dict = {
-        'merchant_api_key': OXAPAY_MERCHANT_KEY,
-        'amount': plan['price'],
-        'currency': plan['currency'],
-        'order_id': f"{user_id}:{plan_id}:{uuid.uuid4().hex[:8]}",
-        'callback_url': f"{SITE_URL}/api/webhook/oxapay",
-        'return_url': f"{SITE_URL}/dashboard",
-        'description': f"TreatBlocker {plan['name']} Plan Subscription",
-        'sandbox': SANDBOX_MODE
-    }
-    payload = json.dumps(payload_dict).encode('utf-8')
+    # In sandbox mode the merchant field is literally 'sandbox'
+    merchant = 'sandbox' if SANDBOX_MODE else OXAPAY_MERCHANT_KEY
+
+    payload = json.dumps({
+        "merchant":      merchant,
+        "amount":        plan['price'],
+        "currency":      plan['currency'],
+        "lifeTime":      30,
+        "feePaidByPayer": 1,
+        "underPaidCover": 2.5,
+        "callbackUrl":   f"{SITE_URL}/api/webhook/oxapay",
+        "returnUrl":     f"{SITE_URL}/dashboard",
+        "description":   f"TreatBlocker {plan['name']} Plan",
+        "orderId":       f"{user_id}:{plan_id}:{uuid.uuid4().hex[:8]}"
+    }).encode('utf-8')
 
     req = urllib.request.Request(
-        OXAPAY_API_URL,
+        f"{OXAPAY_API}/merchants/request",
         data=payload,
         headers={
             'Content-Type': 'application/json',
-            'merchant_api_key': OXAPAY_MERCHANT_KEY,
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         },
         method='POST'
     )
 
     try:
-        print(f'[CHECKOUT] Making Oxapay request to {OXAPAY_API_URL}')
-        print(f'[CHECKOUT] Plan: {plan_id}, User: {user_id}')
         with urllib.request.urlopen(req, timeout=15) as resp:
             result = json.loads(resp.read().decode('utf-8'))
-            print(f'[CHECKOUT] Oxapay response: {json.dumps(result)}')
 
-        # Oxapay returns result with status 200 and payLink in the data object
-        if result.get('status') == 200 and 'payLink' in result:
-            print(f'[CHECKOUT] Success - returning checkout URL: {result["payLink"]}')
+        if result.get('result') == 100:
             return jsonify({
                 'success':  True,
-                'payLink':  result.get('payLink'),
-                'trackId':  result.get('trackId'),
-                'plan':     plan_id
-            })
-        # Some versions of the API might nest payLink in a 'data' object
-        elif result.get('status') == 200 and result.get('data', {}).get('payLink'):
-            pay_link = result['data']['payLink']
-            print(f'[CHECKOUT] Success (nested) - returning checkout URL: {pay_link}')
-            return jsonify({
-                'success':  True,
-                'payLink':  pay_link,
-                'trackId':  result['data'].get('trackId'),
-                'plan':     plan_id
+                'payLink':  result['payLink'],
+                'trackId':  result['trackId'],
+                'plan':     plan_id,
+                'sandbox':  SANDBOX_MODE
             })
         else:
-            print(f'[CHECKOUT] Error in Oxapay response: {result}')
-            return jsonify({'error': result.get('message', 'Failed to create checkout session'), 'debug': result}), 400
+            return jsonify({'error': result.get('message', 'OxaPay error')}), 400
 
-    except urllib.error.HTTPError as e:
-        error_body = e.read().decode('utf-8')
-        print(f'[CHECKOUT] HTTP Error {e.code}: {error_body}')
-        return jsonify({'error': f'Payment provider error: {error_body}'}), 500
     except Exception as e:
-        print(f'[CHECKOUT] Exception: {str(e)}')
-        import traceback
-        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 # ─────────────────────────────────────────
@@ -144,25 +120,25 @@ def create_checkout():
 
 @app.route('/api/webhook/oxapay', methods=['POST'])
 def oxapay_webhook():
-    data = request.get_json(silent=True) or {}
-    
-    # Oxapay sends status in the webhook data
-    status = data.get('status')
-    order_id = data.get('order_id')
-    
-    if status == 'paid' and order_id:
-        # order_id format: user_id:plan_id:random_hex
+    data = request.json
+
+    # Skip merchant check in sandbox mode
+    if not SANDBOX_MODE:
+        if data.get('merchant') != OXAPAY_MERCHANT_KEY:
+            return jsonify({'error': 'Unauthorized'}), 401
+
+    status   = data.get('status')
+    order_id = data.get('orderId', '')
+
+    if status == 'Paid':
         parts = order_id.split(':')
         if len(parts) >= 2:
             user_id = parts[0]
             plan_id = parts[1]
-            
-            if plan_id in ('pro', 'family'):
-                subscriptions_db[user_id] = {
-                    'plan':    plan_id,
-                    'expires': (datetime.now() + timedelta(days=30)).isoformat()
-                }
-                print(f'[WEBHOOK] Subscription activated for user {user_id}: {plan_id}')
+            subscriptions_db[user_id] = {
+                'plan':    plan_id,
+                'expires': (datetime.now() + timedelta(days=30)).isoformat()
+            }
 
     return jsonify({'result': 100})
 
@@ -196,7 +172,6 @@ def analyze_url():
     url     = data.get('url', '')
     user_id = session.get('user_id', str(uuid.uuid4()))
     session['user_id'] = user_id
-    session.permanent = True
 
     if not url:
         return jsonify({'error': 'No URL provided'}), 400
