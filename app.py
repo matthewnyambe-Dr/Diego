@@ -70,9 +70,14 @@ def create_checkout():
     merchant = 'sandbox' if SANDBOX_MODE else OXAPAY_MERCHANT_KEY
 
     # Prepare payload for OxaPay Generate Invoice API
-    payload = json.dumps({
+    # Ensure amount is a string with 2 decimals
+    amount_str = "{:.2f}".format(plan['price'])
+    # Replace colons with hyphens in orderId
+    order_id = f"{user_id}-{plan_id}-{uuid.uuid4().hex[:8]}"
+
+    payload_dict = {
         "merchant":         merchant,
-        "amount":           plan['price'],
+        "amount":           amount_str,
         "currency":         plan['currency'],
         "lifeTime":         30,
         "feePaidByPayer":   1,
@@ -80,8 +85,12 @@ def create_checkout():
         "callbackUrl":      f"{SITE_URL}/api/webhook/oxapay",
         "returnUrl":        f"{SITE_URL}/dashboard",
         "description":      f"TreatBlocker {plan['name']} Plan",
-        "orderId":          f"{user_id}:{plan_id}:{uuid.uuid4().hex[:8]}"
-    }).encode('utf-8')
+        "orderId":          order_id
+    }
+    
+    payload = json.dumps(payload_dict).encode('utf-8')
+
+    print(f"[CHECKOUT] Requesting {plan_id} plan with payload: {payload_dict}")
 
     req = urllib.request.Request(
         f"{OXAPAY_API}/merchants/request",
@@ -95,7 +104,9 @@ def create_checkout():
 
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
-            result = json.loads(resp.read().decode('utf-8'))
+            resp_data = resp.read().decode('utf-8')
+            print(f"[CHECKOUT] OxaPay response: {resp_data}")
+            result = json.loads(resp_data)
 
         # OxaPay returns result 100 for success
         if result.get('result') == 100:
@@ -107,7 +118,11 @@ def create_checkout():
                 'sandbox':  SANDBOX_MODE
             })
         else:
-            return jsonify({'error': result.get('message', 'OxaPay error')}), 400
+            print(f"[CHECKOUT] OxaPay validation error: {result}")
+            return jsonify({
+                'error': result.get('message', 'OxaPay error'),
+                'details': result
+            }), 400
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500

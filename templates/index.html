@@ -1102,7 +1102,9 @@ async function startCheckout(plan) {
     else if (data.success && data.payLink) window.location.href = data.payLink;
     else {
       console.error('Checkout error:', data);
+      const errorMsg = data.details ? `${data.error}: ${JSON.stringify(data.details)}` : data.error;
       toast(data.error || 'Payment error — try again', '⚠️');
+      if (data.details) console.log('OxaPay Validation Details:', data.details);
     }
   } catch(e) {
     toast('Connection error', '⚠️');
