@@ -25,7 +25,8 @@ OPENROUTER_API_KEY   = os.environ.get('OPENROUTER_API_KEY', 'sk-or-v1-69497d86b9
 OPENROUTER_API       = 'https://openrouter.ai/api/v1/chat/completions'
 
 # YOUR Replit URL — update this after you deploy
-SITE_URL            = os.environ.get('SITE_URL', 'https://diego-production-28d4.up.railway.app')
+# Ensure SITE_URL has no trailing slash for Oxapay validation
+SITE_URL            = os.environ.get('SITE_URL', 'https://diego-production-28d4.up.railway.app').rstrip('/')
 # Set to True while testing, False when you go live
 SANDBOX_MODE        = False
 
@@ -79,7 +80,7 @@ def create_checkout():
         'amount': plan['price'],
         'currency': plan['currency'],
         'order_id': f"{user_id}:{plan_id}:{uuid.uuid4().hex[:8]}",
-        # 'callback_url': f"{SITE_URL}/api/webhook/oxapay", # Temporarily disabled to fix validation error
+        'callback_url': f"{SITE_URL}/api/webhook/oxapay",
         'return_url': f"{SITE_URL}/dashboard",
         'description': f"TreatBlocker {plan['name']} Plan Subscription",
         'sandbox': SANDBOX_MODE
