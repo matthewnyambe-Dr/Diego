@@ -16,7 +16,7 @@ app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
 # CONFIG — fill these in after deploying
 # ─────────────────────────────────────────
 OXAPAY_MERCHANT_KEY = os.environ.get('OXAPAY_MERCHANT_KEY', 'EEN3JK-5CNPH8-1C7XFJ-WX6WLT')
-OXAPAY_API           = 'https://api.oxapay.com'
+OXAPAY_API           = 'https://api.oxapay.com/v1'
 OPENROUTER_API_KEY   = os.environ.get('OPENROUTER_API_KEY', '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')
 OPENROUTER_API       = 'https://openrouter.ai/api/v1/chat/completions'
 # YOUR Replit URL — update this after you deploy
@@ -28,8 +28,8 @@ SANDBOX_MODE        = False
 # PLANS
 # ─────────────────────────────────────────
 PLANS = {
-    'pro':    {'name': 'Pro',    'price': 4.99,  'currency': 'USD'},
-    'family': {'name': 'Family', 'price': 9.99,  'currency': 'USD'},
+    'pro':    {'name': 'Pro',    'price': 4.99,  'currency': 'USDT'},
+    'family': {'name': 'Family', 'price': 9.99,  'currency': 'USDT'},
 }
 
 # ─────────────────────────────────────────
