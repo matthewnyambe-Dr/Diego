@@ -9,19 +9,18 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'treatblocker-secret-2024')
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_COOKIE_SECURE']   = False  # Set to False to ensure sessions work across all environments
+app.config['SESSION_COOKIE_SECURE']   = True
 app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
 
 # ─────────────────────────────────────────
 # CONFIG — fill these in after deploying
 # ─────────────────────────────────────────
-OXAPAY_MERCHANT_KEY_PRO    = os.environ.get('OXAPAY_MERCHANT_KEY_PRO', 'JCKYZB-B8CFJS-CKNUTE-MPVHZS')
-OXAPAY_MERCHANT_KEY_FAMILY = os.environ.get('OXAPAY_MERCHANT_KEY_FAMILY', 'EEN3JK-5CNPH8-1C7XFJ-WX6WLT')
-OXAPAY_API                 = 'https://api.oxapay.com/v1'
+OXAPAY_MERCHANT_KEY = os.environ.get('OXAPAY_MERCHANT_KEY', 'EEN3JK-5CNPH8-1C7XFJ-WX6WLT')
+OXAPAY_API           = 'https://api.oxapay.com'
 OPENROUTER_API_KEY   = os.environ.get('OPENROUTER_API_KEY', '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')
 OPENROUTER_API       = 'https://openrouter.ai/api/v1/chat/completions'
 # YOUR Replit URL — update this after you deploy
-SITE_URL            = os.environ.get('SITE_URL', 'https://diego-production-28d4.up.railway.app').rstrip('/')
+SITE_URL            = os.environ.get('SITE_URL', 'https://diego-production-28d4.up.railway.app')
 # Set to True while testing, False when you go live
 SANDBOX_MODE        = False
 
@@ -67,32 +66,26 @@ def create_checkout():
 
     plan = PLANS[plan_id]
 
-    # Select the correct Merchant Key based on plan
-    if plan_id == 'pro':
-        merchant_key = OXAPAY_MERCHANT_KEY_PRO
-    elif plan_id == 'family':
-        merchant_key = OXAPAY_MERCHANT_KEY_FAMILY
-    else:
-        return jsonify({'error': 'Invalid plan'}), 400
+    # In sandbox mode the merchant field is literally 'sandbox'
+    merchant = 'sandbox' if SANDBOX_MODE else OXAPAY_MERCHANT_KEY
 
     # Prepare payload for OxaPay Generate Invoice API
-    payload = {
-        "merchant_api_key": merchant_key,
+    payload = json.dumps({
+        "merchant":         merchant,
         "amount":           plan['price'],
         "currency":         plan['currency'],
-        "lifetime":         30,
-        "fee_paid_by_payer": 1,
-        "under_paid_coverage": 2.5,
-        "callback_url":     f"{SITE_URL}/api/webhook/oxapay",
-        "return_url":       f"{SITE_URL}/dashboard",
+        "lifeTime":         30,
+        "feePaidByPayer":   1,
+        "underPaidCover":   2.5,
+        "callbackUrl":      f"{SITE_URL}/api/webhook/oxapay",
+        "returnUrl":        f"{SITE_URL}/dashboard",
         "description":      f"TreatBlocker {plan['name']} Plan",
-        "order_id":         f"{user_id}:{plan_id}:{uuid.uuid4().hex[:8]}",
-        "sandbox":          SANDBOX_MODE
-    }
+        "orderId":          f"{user_id}:{plan_id}:{uuid.uuid4().hex[:8]}"
+    }).encode('utf-8')
 
     req = urllib.request.Request(
-        f"{OXAPAY_API}/payment/invoice",
-        data=json.dumps(payload).encode('utf-8'),
+        f"{OXAPAY_API}/merchants/request",
+        data=payload,
         headers={'Content-Type': 'application/json'},
         method='POST'
     )
@@ -101,11 +94,11 @@ def create_checkout():
         with urllib.request.urlopen(req, timeout=15) as resp:
             result = json.loads(resp.read().decode('utf-8'))
 
-        # OxaPay returns message "success" or similar, check result code
-        if result.get('message') == 'success' or result.get('status') == 200:
+        # OxaPay returns result 100 for success
+        if result.get('result') == 100:
             return jsonify({
                 'success':  True,
-                'payLink':  result.get('payLink') or result.get('address'),
+                'payLink':  result.get('payLink'),
                 'trackId':  result.get('trackId'),
                 'plan':     plan_id,
                 'sandbox':  SANDBOX_MODE
@@ -124,11 +117,17 @@ def create_checkout():
 def oxapay_webhook():
     data = request.get_json(silent=True) or {}
 
+    # Skip merchant check in sandbox mode
+    if not SANDBOX_MODE:
+        if data.get('merchant') != OXAPAY_MERCHANT_KEY:
+            return jsonify({'error': 'Unauthorized'}), 401
+
     status   = data.get('status')
-    order_id = data.get('order_id') or data.get('orderId', '')
+    order_id = data.get('orderId', '')
 
     if status == 'Paid':
-        parts = order_id.split(':', 2)
+        # orderId format: user_id:plan_id:random
+        parts = order_id.split(':')
         if len(parts) >= 2:
             user_id = parts[0].strip()
             plan_id = parts[1].strip()
