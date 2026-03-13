@@ -29,7 +29,6 @@ SANDBOX_MODE        = False
 # ─────────────────────────────────────────
 PLANS = {
     'pro':    {'name': 'Pro',    'price': 4.99,  'currency': 'USDT'},
-    'family': {'name': 'Family', 'price': 9.99,  'currency': 'USDT'},
 }
 
 # ─────────────────────────────────────────
@@ -149,7 +148,7 @@ def oxapay_webhook():
         if len(parts) >= 2:
             user_id = parts[0].strip()
             plan_id = parts[1].strip()
-            if plan_id in ('pro', 'family'):
+            if plan_id == 'pro':
                 subscriptions_db[user_id] = {
                     'plan':    plan_id,
                     'expires': (datetime.now() + timedelta(days=30)).isoformat()
